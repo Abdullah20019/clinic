@@ -3,6 +3,9 @@ const siteHeader = document.getElementById("siteHeader");
 const menuToggle = document.getElementById("menuToggle");
 const siteNav = document.getElementById("siteNav");
 const backToTop = document.getElementById("backToTop");
+const isLowPowerDevice =
+  window.matchMedia("(max-width: 768px)").matches ||
+  window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 window.addEventListener("load", () => {
   if (loader) {
@@ -44,19 +47,23 @@ if (backToTop) {
 
 const revealItems = document.querySelectorAll(".reveal-up, .reveal-left, .reveal-right");
 if (revealItems.length) {
-  const revealObserver = new IntersectionObserver(
-    (entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add("visible");
-          revealObserver.unobserve(entry.target);
-        }
-      });
-    },
-    { threshold: 0.18 }
-  );
+  if (isLowPowerDevice) {
+    revealItems.forEach((item) => item.classList.add("visible"));
+  } else {
+    const revealObserver = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("visible");
+            revealObserver.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.18 }
+    );
 
-  revealItems.forEach((item) => revealObserver.observe(item));
+    revealItems.forEach((item) => revealObserver.observe(item));
+  }
 }
 
 const counters = document.querySelectorAll(".counter");
@@ -97,34 +104,64 @@ if (testimonialTrack) {
   const testimonials = testimonialTrack.querySelectorAll(".testimonial");
   let current = 0;
 
+  const syncTestimonialHeight = () => {
+    if (!testimonials.length || window.matchMedia("(max-width: 680px)").matches) {
+      testimonialTrack.style.minHeight = "";
+      return;
+    }
+
+    let maxHeight = 0;
+    testimonials.forEach((card) => {
+      const previousDisplay = card.style.display;
+      const previousVisibility = card.style.visibility;
+      const wasActive = card.classList.contains("active");
+
+      card.style.display = "block";
+      card.style.visibility = "hidden";
+      card.classList.add("active");
+      maxHeight = Math.max(maxHeight, card.offsetHeight);
+
+      if (!wasActive) card.classList.remove("active");
+      card.style.display = previousDisplay;
+      card.style.visibility = previousVisibility;
+    });
+
+    testimonialTrack.style.minHeight = `${maxHeight}px`;
+  };
+
   const rotateTestimonials = () => {
     testimonials[current].classList.remove("active");
     current = (current + 1) % testimonials.length;
     testimonials[current].classList.add("active");
   };
 
+  syncTestimonialHeight();
+  window.addEventListener("resize", syncTestimonialHeight);
+
   if (testimonials.length > 1) {
-    setInterval(rotateTestimonials, 3800);
+    setInterval(rotateTestimonials, isLowPowerDevice ? 5200 : 3800);
   }
 }
 
 const rippleButtons = document.querySelectorAll(".ripple");
-rippleButtons.forEach((button) => {
-  button.addEventListener("click", (event) => {
-    const rect = button.getBoundingClientRect();
-    const span = document.createElement("span");
-    const size = Math.max(rect.width, rect.height);
+if (!isLowPowerDevice) {
+  rippleButtons.forEach((button) => {
+    button.addEventListener("click", (event) => {
+      const rect = button.getBoundingClientRect();
+      const span = document.createElement("span");
+      const size = Math.max(rect.width, rect.height);
 
-    span.className = "ripple-effect";
-    span.style.width = `${size}px`;
-    span.style.height = `${size}px`;
-    span.style.left = `${event.clientX - rect.left - size / 2}px`;
-    span.style.top = `${event.clientY - rect.top - size / 2}px`;
+      span.className = "ripple-effect";
+      span.style.width = `${size}px`;
+      span.style.height = `${size}px`;
+      span.style.left = `${event.clientX - rect.left - size / 2}px`;
+      span.style.top = `${event.clientY - rect.top - size / 2}px`;
 
-    button.appendChild(span);
-    span.addEventListener("animationend", () => span.remove());
+      button.appendChild(span);
+      span.addEventListener("animationend", () => span.remove());
+    });
   });
-});
+}
 
 const galleryGrid = document.getElementById("galleryGrid");
 const filterButtons = document.querySelectorAll(".filter-btn");

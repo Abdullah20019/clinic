@@ -528,6 +528,7 @@ p {
   font-size: 1.05rem;
   margin-bottom: 1rem;
   color: #2e3c58;
+  overflow-wrap: anywhere;
 }
 
 .review-stars {
@@ -541,6 +542,8 @@ p {
   margin-top: 1.35rem;
   display: flex;
   justify-content: center;
+  position: relative;
+  z-index: 2;
 }
 
 .masonry-preview {
@@ -1051,6 +1054,15 @@ select {
   .hero-content {
     padding-top: 7rem;
   }
+
+  .glass-card {
+    backdrop-filter: none;
+    background: rgba(255, 255, 255, 0.82);
+  }
+
+  .hero-bg {
+    transform: none;
+  }
 }
 
 @media (max-width: 680px) {
@@ -1084,5 +1096,36 @@ select {
 
   .appointment-form-grid {
     grid-template-columns: 1fr;
+  }
+
+  .testimonial-track {
+    min-height: auto;
+  }
+
+  .testimonial {
+    position: relative;
+    inset: auto;
+    transform: none;
+    transition: opacity 0.35s var(--ease);
+    display: none;
+  }
+
+  .testimonial.active {
+    display: block;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .hero-bg {
+    transform: none;
   }
 }
